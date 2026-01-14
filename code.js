@@ -77,20 +77,20 @@ figma.ui.onmessage = (msg) => {
     });
   }
 
-  if (options.emptyError) {
+  if (options.filledError) {
     generateUIState(baseFrame, {
-      name: "Empty Error",
-      filled: false,
+      name: "Filled Error",
+      filled: true,
       isError: true,
       index: ++index,
       gap,
     });
   }
 
-  if (options.filledError) {
+  if (options.emptyError) {
     generateUIState(baseFrame, {
-      name: "Filled Error",
-      filled: true,
+      name: "Empty Error",
+      filled: false,
       isError: true,
       index: ++index,
       gap,
@@ -114,14 +114,11 @@ function generateUIState(baseFrame, config) {
   );
 
   forms.forEach((form) => {
-    const inputIds = form
-      .findAll((n) => n.type === "INSTANCE" && INPUT_COMPONENTS[n.name])
-      .map((n) => n.id);
+    const inputs = form.findAll(
+      (n) => n.type === "INSTANCE" && INPUT_COMPONENTS[n.name]
+    );
 
-    inputIds.forEach((id) => {
-      const input = figma.getNodeById(id);
-      if (!input || input.type !== "INSTANCE") return;
-
+    inputs.forEach((input) => {
       const spec = INPUT_COMPONENTS[input.name];
       const props = input.componentProperties;
       if (!props) return;
@@ -129,11 +126,7 @@ function generateUIState(baseFrame, config) {
       const patch = {};
 
       if ("state" in props) {
-        if (config.isError && !config.filled) {
-          patch.state = spec.filledState;
-        } else {
-          patch.state = config.filled ? spec.filledState : spec.emptyState;
-        }
+        patch.state = config.filled ? spec.filledState : spec.emptyState;
       }
 
       if (spec.invalidProp in props) {
